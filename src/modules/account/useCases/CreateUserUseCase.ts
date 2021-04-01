@@ -1,23 +1,18 @@
-import { inject, injectable } from 'tsyringe';
 import { AppError } from '../../../shared/errors/AppError';
 import { ICreateUser } from '../dtos/ICreateUserDTO';
-import { User } from '../schema/User';
-import { IUserRepositoy } from '../repositories/IUserRepository';
+import User, { UserDocument } from '../schema/User';
 
-@injectable()
 class CreateUserCase {
-  constructor(
-    @inject('UserRepository')
-    private userRepositoy: IUserRepositoy
-  ) {}
+  constructor() {}
 
-  async execute({ name, email, password }: ICreateUser): Promise<User> {
-    const userAlreadyExists = await this.userRepositoy.findByEmail(email);
+  async execute({ name, email, password }: ICreateUser): Promise<UserDocument> {
+    const userAlreadyExists = await User.findOne({ email: email }).lean();
 
     if (userAlreadyExists) {
       throw new AppError('User already exists');
     }
-    const user = await this.userRepositoy.create({ name, email, password });
+
+    const user = await User.create({ name, email, password });
     return user;
   }
 }
